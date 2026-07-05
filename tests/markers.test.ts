@@ -1,5 +1,26 @@
 import { test, expect } from "@playwright/test";
-import { loadMarkers, Marker, MarkerDeps } from "../src/markers";
+import { loadMarkers, upsertByUid, Marker, MarkerDeps } from "../src/markers";
+
+const pin = (uid: string, lat: number, lng: number): Marker => ({
+  uid,
+  type: "page",
+  label: uid,
+  lat,
+  lng,
+});
+
+test("upsertByUid appends a marker whose uid is not present", () => {
+  const a = pin("a", 1, 1);
+  const b = pin("b", 2, 2);
+  expect(upsertByUid([a], b)).toEqual([a, b]);
+});
+
+test("upsertByUid replaces a marker in place when its uid already exists", () => {
+  const a = pin("a", 1, 1);
+  const b = pin("b", 2, 2);
+  const aMoved = pin("a", 9, 9);
+  expect(upsertByUid([a, b], aMoved)).toEqual([aMoved, b]);
+});
 
 const tick = (): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, 0));

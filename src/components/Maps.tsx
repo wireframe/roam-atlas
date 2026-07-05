@@ -10,7 +10,7 @@ import openBlockInSidebar from "roamjs-components/writes/openBlockInSidebar";
 import { getReferences, ResolvedReference } from "../references";
 import { getCoordinates, getLocation, writeCoordinates } from "../location";
 import { createGeocoder } from "../geocode";
-import { loadMarkers, Failure, Marker, MarkerDeps } from "../markers";
+import { loadMarkers, upsertByUid, Failure, Marker, MarkerDeps } from "../markers";
 import { watchBlockChildren } from "../reactivity";
 import { clampHeight } from "../height";
 import AliasPreview from "./AliasPreview";
@@ -175,19 +175,25 @@ const Maps = ({ blockId }: { blockId: string }): JSX.Element => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // A watch-driven reload can start while an earlier load's geocodes are still
-  // in flight. Bumping the generation makes each load capture its own id; only
-  // the current load may mutate state, so a superseded load's late markers and
-  // failures are dropped rather than duplicating pins or writing stale results.
+  // in flight. Each load captures its own generation id; only the current load
+  // may mutate state, so a superseded load's streamed and final results are
+  // dropped rather than duplicating pins or clobbering the newer load.
+  //
+  // We never blank the map: pins stream in via upsert over the currently-shown
+  // set (cached ones immediately, geocoded ones as they resolve), then the
+  // completed load's authoritative result reconciles order and drops refs that
+  // are gone. A ref that fails to resolve emits nothing, so it can never remove
+  // the pins that did resolve.
   const reload = useCallback(() => {
     generation.current += 1;
     const loadId = generation.current;
     const isCurrent = () => generation.current === loadId;
-    setMarkers([]);
-    setFailures([]);
     loadMarkers(blockUid, markerDeps(), (marker) => {
-      if (isCurrent()) setMarkers((current) => [...current, marker]);
+      if (isCurrent()) setMarkers((current) => upsertByUid(current, marker));
     }).then((result) => {
-      if (isCurrent()) setFailures(result.failures);
+      if (!isCurrent()) return;
+      setMarkers(result.markers);
+      setFailures(result.failures);
     });
   }, [blockUid]);
 

@@ -89,6 +89,20 @@ const resolveRef = async (
   }
 };
 
+/**
+ * Merge a streamed marker into the displayed set, replacing any pin with the
+ * same uid in place. Lets a reload refresh pins over the currently-shown map
+ * instead of blanking it, so a ref that fails to resolve never removes the
+ * pins that did.
+ */
+export const upsertByUid = (markers: Marker[], marker: Marker): Marker[] => {
+  const index = markers.findIndex((shown) => shown.uid === marker.uid);
+  if (index === -1) return [...markers, marker];
+  const next = markers.slice();
+  next[index] = marker;
+  return next;
+};
+
 const markersOf = (slots: Slot[]): Marker[] =>
   slots.flatMap((slot) => (slot.marker ? [slot.marker] : []));
 
