@@ -100,42 +100,42 @@ Structure: [structure.md](structure.md)
 
 ## Phase 4: Map render pipeline
 
-- [ ] Task 4.1: `loadMarkers` orchestration (dependency-injected) — RED
+- [x] Task 4.1: `loadMarkers` orchestration (dependency-injected) — RED
   - File: `tests/markers.test.ts` (new)
   - Change: define `deps = { getReferences, getLabel, getLocation, getCoordinates, geocode, writeCoordinates }` as stubs. Assert: a ref with cached coords → marker produced, `geocode` NOT called; a ref with `Location::` but no coords → `geocode` called once, `writeCoordinates` called with the result, marker produced; a ref with neither → no marker, one entry in `failures`.
   - Test: `npm test` — fails.
 
-- [ ] Task 4.2: `loadMarkers` — GREEN
+- [x] Task 4.2: `loadMarkers` — GREEN
   - File: `src/markers.ts` (new)
   - Change: `type Marker = {uid, type, label, lat, lng}`. `loadMarkers(mapBlockUid, deps)`: `getReferences` → for each ref, `getCoordinates(uid)`; if present, build marker; else `getLocation(uid)` → if present `geocode(uid, text)` → on result `writeCoordinates` + marker, on null → failure; if no location → failure. Return `{markers, failures}`. Label via `getLabel(ref)` (page: `getPageTitleByPageUid`; block: `getTextByBlockUid`).
   - Test: `npm test` — 4.1 passes.
 
-- [ ] Task 4.3: Wire `loadMarkers` into `Maps.tsx` state
+- [x] Task 4.3: Wire `loadMarkers` into `Maps.tsx` state
   - File: `src/components/Maps.tsx`
   - Change: on mount, resolve `blockUid` via `getUidsFromId(blockId)` (research.md FA4), call `loadMarkers` with real deps + a module-level `createGeocoder()` instance; store `markers`/`failures` in state; render a `<Marker>` per marker.
   - Test: manual in Roam — reference two located pages under `{{[[atlas]]}}`; two pins appear; a page missing `Location::` increments a "couldn't map (N)" notice (Task 4.6).
 
-- [ ] Task 4.4: Auto-fit viewport via a child `FitBounds` component
+- [x] Task 4.4: Auto-fit viewport via a child `FitBounds` component
   - File: `src/components/Maps.tsx`
   - Change: child component calling `useMap()` (research.md FA5); in an effect keyed on `markers`, when ≥1 marker, `map.fitBounds(L.latLngBounds(markers.map(m=>[m.lat,m.lng])), { padding:[24,24], maxZoom: 15 })`. Progressive: refits as markers state grows.
   - Test: manual — map frames all pins; adding a marker re-fits.
 
-- [ ] Task 4.5: Popup + click/shift-click navigation (page vs block)
+- [x] Task 4.5: Popup + click/shift-click navigation (page vs block)
   - File: `src/components/Maps.tsx`, `src/components/AliasPreview.tsx` (new, clean-room reimplement of Roam-markup popup via `roamjs-components/marked` `getParseInline`), `src/components/hooks.ts` (new, `useTreeByHtmlId` helper)
   - Change: `<Popup>` renders the node's rendered markup. On marker click: `type==="page"` → `ui.mainWindow.openPage({page:{uid}})`, `type==="block"` → `ui.mainWindow.openBlock({block:{uid}})`; shift-click → `openBlockInSidebar(uid)` (research.md FA4).
   - Test: manual — click a page pin opens the page; click a block pin opens the block; shift-click opens sidebar.
 
-- [ ] Task 4.6: "couldn't map (N)" notice
+- [x] Task 4.6: "couldn't map (N)" notice
   - File: `src/components/Maps.tsx`
   - Change: if `failures.length`, render a small overlay listing count + labels; never blanks the map (structure error-handling).
   - Test: manual — a referenced page with no `Location::` appears in the notice, other pins still render.
 
-- [ ] Task 4.7: Reactivity via `addPullWatch` — RED/GREEN + manual
+- [x] Task 4.7: Reactivity via `addPullWatch` — RED/GREEN + manual
   - File: `tests/reactivity.test.ts` (new), `src/components/Maps.tsx`
   - Change (impl): on mount, `window.roamAlphaAPI.data.addPullWatch("[:block/children :block/string]", \`[:block/uid "${blockUid}"]\`, cb)` where `cb` re-runs `loadMarkers`; cleanup calls `removePullWatch` with the identical `(pattern, entityId, cb)` tuple (research.md FA7). Extract the register/unregister into a testable `watchBlockChildren(blockUid, cb)` returning a cleanup fn. Change (test): with `installFakeRoam`, `watchBlockChildren` registers a watch; the fake firing a child change invokes `cb`; cleanup calls `removePullWatch`.
   - Test: `npm test` green. Manual: add a new `[[Page]]` child under the map block → a new pin appears without editing/re-rendering the block.
 
-- [ ] Commit Phase 4 — "Map render pipeline: markers, auto-fit, popups, navigation, failure notice, live reactivity"
+- [x] Commit Phase 4 — "Map render pipeline: markers, auto-fit, popups, navigation, failure notice, live reactivity"
 
 ## Phase 5: Widget UX (resize + full-screen)
 

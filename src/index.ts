@@ -22,6 +22,25 @@ export default runExtension(async () => {
     a.leaflet-popup-close-button {
       display: none;
     }
+
+    .roamjs-atlas-notice {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      z-index: 1000;
+      max-width: 240px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+      font-size: 12px;
+      color: #182026;
+    }
+
+    .roamjs-atlas-notice ul {
+      margin: 4px 0 0;
+      padding-left: 16px;
+    }
     `);
 
   return () => {

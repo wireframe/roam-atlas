@@ -41,17 +41,15 @@ export const getCoordinates = (nodeUid: string): [number, number] | null => {
   return value ? parseCoordinates(value) : null;
 };
 
-const hasCoordinates = (nodeUid: string): boolean =>
-  readAttribute(nodeUid, "Coordinates") !== undefined;
-
 /** Cache coordinates back into the graph, never overwriting existing data. */
 export const writeCoordinates = async (
   nodeUid: string,
   [lat, lng]: [number, number]
 ): Promise<void> => {
-  if (hasCoordinates(nodeUid)) return;
+  const { children } = getFullTreeByParentUid(nodeUid);
+  if (getAttributeValue(children, "Coordinates") !== undefined) return;
   await window.roamAlphaAPI.createBlock({
-    location: { "parent-uid": nodeUid, order: "last" },
+    location: { "parent-uid": nodeUid, order: children.length },
     block: { string: `Coordinates:: ${lat}, ${lng}` },
   });
 };
