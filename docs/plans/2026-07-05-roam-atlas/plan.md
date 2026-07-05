@@ -144,17 +144,17 @@ Structure: [structure.md](structure.md)
 
 - [x] Task 5.2: `blockProps` height read/write — DROPPED (session-only; no persistence, no `blockProps.ts`)
 
-- [ ] Task 5.3: Resize drag handle (session-only)
+- [x] Task 5.3: Resize drag handle (session-only)
   - File: `src/components/Maps.tsx`
   - Change: bottom-edge drag handle; on drag, update a `height` React state and call `map.invalidateSize()` (research.md FA5). No persistence — height lives in component state only and resets to the default on reload. Build on the full-width container fix already in place.
   - Test: manual — drag resizes the map (height changes, tiles re-fill); no graph write occurs.
 
-- [ ] Task 5.4: Full-screen toggle (session-only)
+- [x] Task 5.4: Full-screen toggle (session-only)
   - File: `src/components/Maps.tsx`, `src/index.ts` (overlay CSS)
   - Change: control button toggles a `position:fixed` full-viewport class on the container; call `map.invalidateSize()` on enter and exit (research.md FA5); `Esc` key exits. No persistence.
   - Test: manual — button fills viewport and tiles render correctly; `Esc` exits back to inline size.
 
-- [ ] Commit Phase 5 — "Widget UX: session-only drag-resize + full-screen overlay"
+- [x] Commit Phase 5 — "Widget UX: session-only drag-resize + full-screen overlay"
 
 ---
 

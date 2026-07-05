@@ -12,6 +12,7 @@ import { getCoordinates, getLocation, writeCoordinates } from "../location";
 import { createGeocoder } from "../geocode";
 import { loadMarkers, Failure, Marker, MarkerDeps } from "../markers";
 import { watchBlockChildren } from "../reactivity";
+import { clampHeight } from "../height";
 import AliasPreview from "./AliasPreview";
 
 const DEFAULT_HEIGHT = 400;
@@ -74,6 +75,24 @@ const FitBounds = ({ markers }: { markers: Marker[] }): null => {
   return null;
 };
 
+// Leaflet caches the container's pixel size, so a state-driven resize or a
+// full-screen toggle leaves the map painting at its stale dimensions until we
+// tell it to remeasure. Running this through a useMap() child keeps us on the
+// react-leaflet v3 idiom rather than reintroducing a stored map ref.
+const InvalidateOnChange = ({
+  height,
+  isFullscreen,
+}: {
+  height: number;
+  isFullscreen: boolean;
+}): null => {
+  const map = useMap();
+  useEffect(() => {
+    map.invalidateSize();
+  }, [map, height, isFullscreen]);
+  return null;
+};
+
 const MarkerPins = ({ markers }: { markers: Marker[] }): JSX.Element => (
   <>
     {markers.map((marker) => (
@@ -107,11 +126,39 @@ const FailureNotice = ({ failures }: { failures: Failure[] }): JSX.Element | nul
   );
 };
 
+// Thin strip along the map's bottom edge; dragging it resizes the widget.
+const ResizeHandle = ({
+  onResizeStart,
+}: {
+  onResizeStart: (e: React.MouseEvent) => void;
+}): JSX.Element => (
+  <div className="roamjs-atlas-resize-handle" onMouseDown={onResizeStart} />
+);
+
+const FullscreenToggle = ({
+  isFullscreen,
+  onToggle,
+}: {
+  isFullscreen: boolean;
+  onToggle: () => void;
+}): JSX.Element => (
+  <button
+    type="button"
+    className="roamjs-atlas-fullscreen-toggle"
+    onClick={onToggle}
+    title={isFullscreen ? "Exit full screen (Esc)" : "Full screen"}
+  >
+    {isFullscreen ? "×" : "⛶"}
+  </button>
+);
+
 const Maps = ({ blockId }: { blockId: string }): JSX.Element => {
   const { blockUid } = getUidsFromId(blockId);
   const generation = useRef(0);
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [failures, setFailures] = useState<Failure[]>([]);
+  const [height, setHeight] = useState(DEFAULT_HEIGHT);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // A watch-driven reload can start while an earlier load's geocodes are still
   // in flight. Bumping the generation makes each load capture its own id; only
@@ -142,13 +189,65 @@ const Maps = ({ blockId }: { blockId: string }): JSX.Element => {
     requestAnimationFrame(() => m.invalidateSize());
   }, []);
 
+  // Drag-to-resize is session-only: height lives in React state, never in the
+  // graph. We track the drag on `document` so the pointer can leave the thin
+  // handle mid-drag, and suppress text selection while the button is held.
+  // The active drag's teardown is held in a ref so an unmount mid-drag (e.g. a
+  // navigation or graph reload) can detach the listeners before a stray mouseup
+  // calls setHeight on an unmounted component.
+  const endResize = useRef<() => void>();
+  const startResize = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      const startY = e.clientY;
+      const startHeight = height;
+      const onMove = (move: MouseEvent) =>
+        setHeight(clampHeight(startHeight + (move.clientY - startY)));
+      const teardown = () => {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        document.body.style.userSelect = "";
+        endResize.current = undefined;
+      };
+      function onUp(): void {
+        teardown();
+      }
+      document.body.style.userSelect = "none";
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+      endResize.current = teardown;
+    },
+    [height]
+  );
+
+  useEffect(() => () => endResize.current?.(), []);
+
+  const toggleFullscreen = useCallback(() => setIsFullscreen((on) => !on), []);
+
+  // Escape exits full screen; the listener only exists while it is on.
+  useEffect(() => {
+    if (!isFullscreen) return undefined;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsFullscreen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isFullscreen]);
+
   return (
     <ComponentContainer blockId={blockId} className="roamjs-atlas-container">
-      <div style={{ position: "relative", width: "100%" }}>
+      <div
+        className={
+          isFullscreen
+            ? "roamjs-atlas-widget roamjs-atlas-fullscreen"
+            : "roamjs-atlas-widget"
+        }
+        style={{ position: "relative", width: "100%" }}
+      >
         <MapContainer
           center={DEFAULT_CENTER}
           zoom={DEFAULT_ZOOM}
-          style={{ height: DEFAULT_HEIGHT, width: "100%" }}
+          style={{ height: isFullscreen ? "100%" : height, width: "100%" }}
           whenCreated={whenCreated}
         >
           <TileLayer
@@ -159,7 +258,10 @@ const Maps = ({ blockId }: { blockId: string }): JSX.Element => {
           />
           <MarkerPins markers={markers} />
           <FitBounds markers={markers} />
+          <InvalidateOnChange height={height} isFullscreen={isFullscreen} />
         </MapContainer>
+        <FullscreenToggle isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
+        {!isFullscreen && <ResizeHandle onResizeStart={startResize} />}
         <FailureNotice failures={failures} />
       </div>
     </ComponentContainer>

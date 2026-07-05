@@ -47,6 +47,49 @@ export default runExtension(async () => {
       margin: 4px 0 0;
       padding-left: 16px;
     }
+
+    /* Subtle grab strip along the map's bottom edge; drag to resize. */
+    .roamjs-atlas-resize-handle {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 8px;
+      z-index: 1000;
+      cursor: ns-resize;
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .roamjs-atlas-resize-handle:hover {
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    .roamjs-atlas-fullscreen-toggle {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 1000;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+      font-size: 16px;
+      line-height: 28px;
+      color: #182026;
+    }
+
+    /* Session-only full-screen overlay; layered above Roam's UI. */
+    .roamjs-atlas-fullscreen {
+      position: fixed !important;
+      inset: 0;
+      z-index: 9999 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+    }
     `);
 
   return () => {
