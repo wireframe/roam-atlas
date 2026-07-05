@@ -66,7 +66,9 @@ export default runExtension(async () => {
       padding-left: 16px;
     }
 
-    /* Subtle grab strip along the map's bottom edge; drag to resize. */
+    /* Subtle grab strip along the map's bottom edge; drag to resize. The
+       z-index must clear the leaflet panes (forced to 10 above) so the strip
+       sits over the map and receives the mousedown that starts the drag. */
     .roamjs-atlas-resize-handle {
       position: absolute;
       left: 0;
@@ -74,6 +76,7 @@ export default runExtension(async () => {
       bottom: 0;
       height: 8px;
       z-index: 1000;
+      pointer-events: auto;
       cursor: ns-resize;
       background: rgba(0, 0, 0, 0.05);
     }
@@ -82,10 +85,13 @@ export default runExtension(async () => {
       background: rgba(0, 0, 0, 0.15);
     }
 
+    /* Bottom-left is the only free corner: Leaflet's zoom control owns
+       top-left, its attribution owns bottom-right, and Roam's block edit/gear
+       button owns top-right. Anchoring here avoids colliding with that gear. */
     .roamjs-atlas-fullscreen-toggle {
       position: absolute;
-      top: 8px;
-      right: 8px;
+      bottom: 12px;
+      left: 8px;
       z-index: 1000;
       width: 28px;
       height: 28px;
