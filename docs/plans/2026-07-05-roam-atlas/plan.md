@@ -33,46 +33,46 @@ Structure: [structure.md](structure.md)
   - Change: export `installFakeRoam(blocks)` that sets `window.roamAlphaAPI` with an in-memory block store and implements the methods the core uses: `createBlock`, `updateBlock` (incl. `props` merge), `pull`, `q`, `ui.mainWindow.openPage/openBlock`, `data.addPullWatch/removePullWatch`. Store blocks as `{uid, string, order, props, children[]}`. Export a `reset()`.
   - Test: `tests/helpers/roam.test.ts` (new) — after `installFakeRoam`, `createBlock` then `pull("[:block/string]", [":block/uid", uid])` returns the string; `npm test` green.
 
-- [ ] Task 1.4: Extension entry renders an empty OSM map on `{{[[atlas]]}}`
+- [x] Task 1.4: Extension entry renders an empty OSM map on `{{[[atlas]]}}`
   - File: `src/index.ts` (new), `src/components/Maps.tsx` (new, minimal)
   - Change: `runExtension(async () => { createButtonObserver({ shortcut: "atlas", attribute: "atlas", render }); addStyle(...leaflet...); return cleanup })`. Match logic per research.md FA2 (`shortcut: "atlas"` catches both `{{atlas}}` and `{{[[atlas]]}}`). `render(b)` does `ReactDOM.render(<Maps blockId={b.closest(".roam-block").id} />, b.parentElement)`. Minimal `Maps.tsx`: `MapContainer` + single OSM `TileLayer` (`https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`, attribution `&copy; OpenStreetMap contributors`), fixed default height/center, `whenCreated` stashing the instance + `invalidateSize()` (research.md FA5). Inject leaflet CSS `<link>` like the reference (`~/Projects/mapbox/src/index.ts:17-20`).
   - Test: `npm run build:roam` (samepage build --dry) succeeds. Manual: load `build/main.js` in Roam, type `{{[[atlas]]}}` and `{{atlas}}` — an empty OSM map renders with no click (confirms D1 live).
 
-- [ ] Commit Phase 1 — "Bootstrap: OSM map renders on {{[[atlas]]}}, test harness with fake roamAlphaAPI"
+- [x] Commit Phase 1 — "Bootstrap: OSM map renders on {{[[atlas]]}}, test harness with fake roamAlphaAPI"
 
 ## Phase 2: Graph-data layer (references + location)
 
-- [ ] Task 2.1: `classifyReference` (pure) — RED
+- [x] Task 2.1: `classifyReference` (pure) — RED
   - File: `tests/references.test.ts` (new)
   - Change: assert `classifyReference("[[Ferry Building]]") === {type:"page", key:"Ferry Building"}`; `"#[[Ferry Building]]"` and `"#Ferry"` → page; `"((abc123def))"` → `{type:"block", key:"abc123def"}`; plain text `"Zoom"` → `null`.
   - Test: `npm test` — fails (function absent).
 
-- [ ] Task 2.2: `classifyReference` — GREEN
+- [x] Task 2.2: `classifyReference` — GREEN
   - File: `src/references.ts` (new)
   - Change: implement using regex. Block: `/^\(\(([^)]+)\)\)$/`. Page: use `roamjs-components/util/extractTag` semantics (`#[[..]]`, `[[..]]`, leading `#`) — if the text is a bare page ref, return its title; else `null`. (research.md FA4 `extractTag`.)
   - Test: `npm test` — 2.1 tests pass.
 
-- [ ] Task 2.3: `getReferences(mapBlockUid)` wiring — RED then GREEN
+- [x] Task 2.3: `getReferences(mapBlockUid)` wiring — RED then GREEN
   - File: `tests/references.test.ts`, `src/references.ts`
   - Change (test): with `installFakeRoam`, a map block with children `[[A]]`, `((b1))`, and `Zoom` → returns `[{uid: uidA, type:"page"}, {uid:"b1", type:"block"}]` (Zoom ignored). Change (impl): read children via `getFullTreeByParentUid(mapBlockUid)` (research.md FA4), `classifyReference` each child's `text`; for page refs resolve title→uid with `getPageUidByPageTitle`; for block refs the key is the uid; drop `null` and unresolved (`""`) refs.
   - Test: `npm test` green.
 
-- [ ] Task 2.4: `parseCoordinates` (pure) — RED/GREEN
+- [x] Task 2.4: `parseCoordinates` (pure) — RED/GREEN
   - File: `tests/location.test.ts` (new), `src/location.ts` (new)
   - Change: `parseCoordinates("37.7955, -122.3937") === [37.7955,-122.3937]`; extra spaces ok; `"garbage"`, `"1,2,3"`, `""` → `null`.
   - Test: `npm test` green.
 
-- [ ] Task 2.5: `getAttributeValue` (pure) + `getLocation`/`getCoordinates` — RED/GREEN
+- [x] Task 2.5: `getAttributeValue` (pure) + `getLocation`/`getCoordinates` — RED/GREEN
   - File: `tests/location.test.ts`, `src/location.ts`
   - Change: `getAttributeValue(children, "Location")` finds the child whose trimmed `text` starts with `Location::` and returns the trimmed remainder (research.md FA4 string-route: block string is literally `"Location:: value"`). `getLocation(uid)` / `getCoordinates(uid)` = read `getFullTreeByParentUid(uid).children` then `getAttributeValue` (+ `parseCoordinates` for coords). Test both with `installFakeRoam`.
   - Test: `npm test` green.
 
-- [ ] Task 2.6: `writeCoordinates(uid, coords)` idempotent — RED then GREEN
+- [x] Task 2.6: `writeCoordinates(uid, coords)` idempotent — RED then GREEN
   - File: `tests/location.test.ts`, `src/location.ts`
   - Change (test): node with no `Coordinates::` → after `writeCoordinates(uid,[1,2])` a child `"Coordinates:: 1, 2"` exists; calling again does NOT add a second (idempotent, D2); a node with an existing `Coordinates::` is left untouched (never overwrite human data — structure error-handling). Change (impl): read children; if a `Coordinates::` child exists, return without writing; else `createBlock({location:{"parent-uid":uid, order:"last"}, block:{string: \`Coordinates:: ${lat}, ${lng}\`}})` (research.md FA4).
   - Test: `npm test` green.
 
-- [ ] Commit Phase 2 — "Graph-data layer: reference parsing, Location/Coordinates read, idempotent write-back"
+- [x] Commit Phase 2 — "Graph-data layer: reference parsing, Location/Coordinates read, idempotent write-back"
 
 ## Phase 3: Geocoding layer
 
