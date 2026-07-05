@@ -159,6 +159,24 @@ test("writeCoordinates is idempotent across repeated calls", async () => {
   ]);
 });
 
+test("writeCoordinates writes exactly one Coordinates child under concurrent same-uid calls", async () => {
+  const api = installFakeRoam([{ uid: "node-uid", string: "Ferry Building" }]);
+  // Model Roam's async write: the mutation is not observable until the promise
+  // settles, so two unguarded writers both read the pre-write state and race.
+  const realCreateBlock = api.createBlock;
+  api.createBlock = (args) =>
+    new Promise((resolve) => setTimeout(() => resolve(realCreateBlock(args)), 0));
+
+  await Promise.all([
+    writeCoordinates("node-uid", [37.7955, -122.3937]),
+    writeCoordinates("node-uid", [37.7955, -122.3937]),
+  ]);
+
+  expect(coordinateChildren("node-uid")).toEqual([
+    "Coordinates:: 37.7955, -122.3937",
+  ]);
+});
+
 test("writeCoordinates never overwrites an existing Coordinates value", async () => {
   installFakeRoam([
     {

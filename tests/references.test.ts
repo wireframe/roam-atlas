@@ -68,6 +68,27 @@ test("getReferences resolves curated page and block refs, dropping the rest", ()
   ]);
 });
 
+test("getReferences dedupes repeated refs by uid, keeping first-occurrence order", () => {
+  installFakeRoam([
+    {
+      uid: "map-uid",
+      string: "{{[[atlas]]}}",
+      children: [
+        { uid: "c1", string: "[[A]]" },
+        { uid: "c2", string: "[[A]]" },
+        { uid: "c3", string: "((b1))" },
+        { uid: "c4", string: "((b1))" },
+      ],
+    },
+    { uid: "page-a-uid", title: "A" },
+  ]);
+
+  expect(getReferences("map-uid")).toEqual([
+    { uid: "page-a-uid", type: "page" },
+    { uid: "b1", type: "block" },
+  ]);
+});
+
 test("getReferences returns an empty list for a map block with no children", () => {
   installFakeRoam([{ uid: "empty-map-uid", string: "{{[[atlas]]}}" }]);
   expect(getReferences("empty-map-uid")).toEqual([]);

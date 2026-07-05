@@ -42,8 +42,23 @@ const resolveReference = (reference: Reference | null): ResolvedReference[] => {
   return uid ? [{ uid, type: reference.type }] : [];
 };
 
-/** Resolve a map block's curated child references to node uids, in order. */
+const dedupeByUid = (refs: ResolvedReference[]): ResolvedReference[] => {
+  const seen = new Set<string>();
+  return refs.filter((ref) => {
+    if (seen.has(ref.uid)) return false;
+    seen.add(ref.uid);
+    return true;
+  });
+};
+
+/**
+ * Resolve a map block's curated child references to node uids, in order.
+ * A uid that a child resolves to more than once is kept only on first
+ * occurrence, so a repeated ref never pins the same node twice.
+ */
 export const getReferences = (mapBlockUid: string): ResolvedReference[] =>
-  getFullTreeByParentUid(mapBlockUid).children.flatMap((child) =>
-    resolveReference(classifyReference(child.text))
+  dedupeByUid(
+    getFullTreeByParentUid(mapBlockUid).children.flatMap((child) =>
+      resolveReference(classifyReference(child.text))
+    )
   );

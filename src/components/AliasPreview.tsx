@@ -33,12 +33,7 @@ const AliasPreview = ({ label }: { label: string }): JSX.Element => {
       active = false;
     };
   }, [label]);
-  return (
-    <span
-      className="roamjs-atlas-label"
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  );
+  return <span dangerouslySetInnerHTML={{ __html: html }} />;
 };
 
 export default AliasPreview;

@@ -41,8 +41,7 @@ export const getCoordinates = (nodeUid: string): [number, number] | null => {
   return value ? parseCoordinates(value) : null;
 };
 
-/** Cache coordinates back into the graph, never overwriting existing data. */
-export const writeCoordinates = async (
+const writeCoordinatesOnce = async (
   nodeUid: string,
   [lat, lng]: [number, number]
 ): Promise<void> => {
@@ -52,4 +51,24 @@ export const writeCoordinates = async (
     location: { "parent-uid": nodeUid, order: children.length },
     block: { string: `Coordinates:: ${lat}, ${lng}` },
   });
+};
+
+// Roam writes settle asynchronously, so two same-uid writers can each observe
+// the pre-write state and both append a Coordinates child. Sharing one in-flight
+// promise per uid collapses concurrent writers onto a single write; the entry
+// clears once it settles so a later, legitimate write can still proceed.
+const inFlight = new Map<string, Promise<void>>();
+
+/** Cache coordinates back into the graph, never overwriting existing data. */
+export const writeCoordinates = (
+  nodeUid: string,
+  coordinates: [number, number]
+): Promise<void> => {
+  const pending = inFlight.get(nodeUid);
+  if (pending) return pending;
+  const result = writeCoordinatesOnce(nodeUid, coordinates);
+  inFlight.set(nodeUid, result);
+  const forget = () => inFlight.delete(nodeUid);
+  result.then(forget, forget);
+  return result;
 };
