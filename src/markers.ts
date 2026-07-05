@@ -6,6 +6,7 @@ export type Marker = {
   label: string;
   lat: number;
   lng: number;
+  location?: string;
 };
 
 export type Failure = {
@@ -28,12 +29,18 @@ type Slot = { marker?: Marker; failure?: Failure };
 
 type OnMarker = (marker: Marker) => void;
 
-const marker = (ref: Ref, label: string, [lat, lng]: [number, number]): Marker => ({
+const marker = (
+  ref: Ref,
+  label: string,
+  [lat, lng]: [number, number],
+  location?: string
+): Marker => ({
   uid: ref.uid,
   type: ref.type,
   label,
   lat,
   lng,
+  ...(location ? { location } : {}),
 });
 
 const failure = (ref: Ref, label: string, reason: Failure["reason"]): Failure => ({
@@ -54,18 +61,18 @@ const attemptRef = async (
   onMarker?: OnMarker
 ): Promise<Slot> => {
   const label = deps.getLabel(ref);
+  const location = deps.getLocation(ref.uid);
 
   const cached = deps.getCoordinates(ref.uid);
-  if (cached) return emit(marker(ref, label, cached), onMarker);
+  if (cached) return emit(marker(ref, label, cached, location), onMarker);
 
-  const location = deps.getLocation(ref.uid);
   if (!location) return { failure: failure(ref, label, "no-location") };
 
   const coordinates = await deps.geocode(ref.uid, location);
   if (!coordinates) return { failure: failure(ref, label, "geocode-failed") };
 
   await deps.writeCoordinates(ref.uid, coordinates);
-  return emit(marker(ref, label, coordinates), onMarker);
+  return emit(marker(ref, label, coordinates, location), onMarker);
 };
 
 // A single misbehaving reference must never sink the whole map render, so an

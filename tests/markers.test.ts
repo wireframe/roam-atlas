@@ -39,6 +39,28 @@ test("a cached ref becomes a marker without geocoding", async () => {
   expect(emitted).toEqual(markers);
 });
 
+test("a cached ref carries its location text when the attribute is still present", async () => {
+  const deps = stubDeps({
+    getReferences: () => [{ uid: "u1", type: "page" }],
+    getLabel: () => "Ferry Building",
+    getLocation: (uid) => (uid === "u1" ? "San Francisco" : undefined),
+    getCoordinates: (uid) => (uid === "u1" ? [37.8, -122.4] : null),
+  });
+
+  const { markers } = await loadMarkers("map", deps);
+
+  expect(markers).toEqual([
+    {
+      uid: "u1",
+      type: "page",
+      label: "Ferry Building",
+      lat: 37.8,
+      lng: -122.4,
+      location: "San Francisco",
+    },
+  ]);
+});
+
 test("an uncached located ref geocodes, caches, and becomes a marker", async () => {
   const geocoded: [string, string][] = [];
   const written: [string, [number, number]][] = [];
@@ -69,6 +91,7 @@ test("an uncached located ref geocodes, caches, and becomes a marker", async () 
       label: "Ferry Building",
       lat: 37.8,
       lng: -122.4,
+      location: "Ferry Building",
     },
   ]);
   expect(failures).toEqual([]);
@@ -136,7 +159,14 @@ test("a mixed set splits into markers and failures, preserving reference order",
 
   expect(markers).toEqual([
     { uid: "cached", type: "page", label: "cached", lat: 1, lng: 2 },
-    { uid: "located", type: "block", label: "located", lat: 3, lng: 4 },
+    {
+      uid: "located",
+      type: "block",
+      label: "located",
+      lat: 3,
+      lng: 4,
+      location: "Somewhere",
+    },
   ]);
   expect(failures).toEqual([
     { uid: "lost", type: "page", label: "lost", reason: "no-location" },

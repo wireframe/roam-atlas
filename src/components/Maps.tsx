@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import ReactDOM from "react-dom";
 import { MapContainer, Marker as MarkerPin, Popup, TileLayer, useMap } from "react-leaflet";
-import L, { Icon, LatLngExpression, LeafletMouseEvent, Map } from "leaflet";
+import L, { Icon, LatLngExpression, Map } from "leaflet";
 import ComponentContainer from "roamjs-components/components/ComponentContainer";
+import renderWithUnmount from "roamjs-components/util/renderWithUnmount";
 import getUidsFromId from "roamjs-components/dom/getUidsFromId";
 import getPageTitleByPageUid from "roamjs-components/queries/getPageTitleByPageUid";
 import getTextByBlockUid from "roamjs-components/queries/getTextByBlockUid";
@@ -56,8 +56,10 @@ const openNode = (marker: Marker): void => {
   }
 };
 
-const navigateTo = (marker: Marker) => (e: LeafletMouseEvent): void => {
-  if (e.originalEvent.shiftKey) {
+// The marker itself only surfaces the popup; opening the node is a deliberate
+// second click on the popup heading. Shift-click sends it to the right sidebar.
+const openFromPopup = (marker: Marker) => (e: React.MouseEvent): void => {
+  if (e.shiftKey) {
     openBlockInSidebar(marker.uid);
   } else {
     openNode(marker);
@@ -93,17 +95,29 @@ const InvalidateOnChange = ({
   return null;
 };
 
+// Popup for a pin: the node's text as a clickable heading that opens it, plus
+// the human-readable location line when the source attribute is still present.
+const MarkerPopup = ({ marker }: { marker: Marker }): JSX.Element => (
+  <div className="roamjs-atlas-popup">
+    <span
+      className="roamjs-atlas-popup-heading"
+      onClick={openFromPopup(marker)}
+      title="Open (shift-click for right sidebar)"
+    >
+      <AliasPreview label={marker.label} />
+    </span>
+    {marker.location && (
+      <div className="roamjs-atlas-popup-location">{marker.location}</div>
+    )}
+  </div>
+);
+
 const MarkerPins = ({ markers }: { markers: Marker[] }): JSX.Element => (
   <>
     {markers.map((marker) => (
-      <MarkerPin
-        key={marker.uid}
-        position={[marker.lat, marker.lng]}
-        icon={markerIcon}
-        eventHandlers={{ click: navigateTo(marker) }}
-      >
+      <MarkerPin key={marker.uid} position={[marker.lat, marker.lng]} icon={markerIcon}>
         <Popup>
-          <AliasPreview label={marker.label} />
+          <MarkerPopup marker={marker} />
         </Popup>
       </MarkerPin>
     ))}
@@ -242,12 +256,12 @@ const Maps = ({ blockId }: { blockId: string }): JSX.Element => {
             ? "roamjs-atlas-widget roamjs-atlas-fullscreen"
             : "roamjs-atlas-widget"
         }
-        style={{ position: "relative", width: "100%" }}
+        style={{ position: "relative", width: "100%", height }}
       >
         <MapContainer
           center={DEFAULT_CENTER}
           zoom={DEFAULT_ZOOM}
-          style={{ height: isFullscreen ? "100%" : height, width: "100%" }}
+          style={{ height: "100%", width: "100%" }}
           whenCreated={whenCreated}
         >
           <TileLayer
@@ -274,7 +288,11 @@ export const render = (b: HTMLButtonElement): void => {
     return;
   }
   b.parentElement.onmousedown = (e: MouseEvent) => e.stopPropagation();
-  ReactDOM.render(<Maps blockId={block.id} />, b.parentElement);
+  // renderWithUnmount watches for Roam removing the block DOM (virtualization on
+  // scroll, navigation) and unmounts the tree, so every useEffect cleanup runs:
+  // the pull-watch is removed, the Escape listener is detached, and any active
+  // drag is torn down. Raw ReactDOM.render would leak all three.
+  renderWithUnmount(<Maps blockId={block.id} />, b.parentElement);
 };
 
 export default Maps;

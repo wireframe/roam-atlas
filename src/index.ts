@@ -29,6 +29,24 @@ export default runExtension(async () => {
       display: none;
     }
 
+    /* Popup heading doubles as the open-node affordance; the location line
+       below it is read-only context. */
+    .roamjs-atlas-popup-heading {
+      cursor: pointer;
+      font-weight: 600;
+      color: #106ba3;
+    }
+
+    .roamjs-atlas-popup-heading:hover {
+      text-decoration: underline;
+    }
+
+    .roamjs-atlas-popup-location {
+      margin-top: 4px;
+      font-size: 12px;
+      color: #5c7080;
+    }
+
     .roamjs-atlas-notice {
       position: absolute;
       bottom: 8px;

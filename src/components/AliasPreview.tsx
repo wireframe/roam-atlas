@@ -35,7 +35,7 @@ const AliasPreview = ({ label }: { label: string }): JSX.Element => {
   }, [label]);
   return (
     <span
-      className="roamjs-atlas-popup"
+      className="roamjs-atlas-label"
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
