@@ -36,18 +36,19 @@ from every resized map — rejected.)
 - Block props — store in the map block's hidden `:block/props` via roamAlphaAPI; persists, invisible, page-free.
 - Session-only — no persistence; resets on reload.
 - Plain child text block — visible, page-free, but clutters the marker list.
-**Chosen:** Store height in the map block's hidden `:block/props`
-(`window.roamAlphaAPI.updateBlock({ block: { uid, props } })`, read via
-`pull("[:block/props]", ...)`). Never a graph attribute; no inline param.
-**Rationale:** Research (research.md FA1/FA2) found the inline-param form
-(`{{[[atlas]]: height=500}}`) has an unverified render/match gate:
-`createButtonObserver` matches the button's `innerText` by exact equality, so an
-inline param that bleeds into the visible label would stop the component from
-rendering — and that can't be confirmed without a live browser spike. Block
-props persists across reloads, creates no page or backlinks, is invisible in the
-outline, and is where Roam itself stashes component state. Its only caveat
-(research.md FA3) is that `props` write-persistence is community-typed rather
-than officially documented; the implementation phase will confirm it early.
+**Chosen (FINAL):** Session-only — resize adjusts height in React state for the
+current session; it resets to the auto-fit default on reload. No persistence, no
+graph writes.
+**Rationale:** The block-props plan was invalidated by live spikes (research.md
+FA3, 2026-07-05). `updateBlock` REPLACES the entire `:block/props` map (not
+merge), and Roam applies a non-uniform colon keyword transform to keys on the
+read/write round-trip, with no roamjs-components helper to abstract it. Safely
+persisting our height without clobbering other extensions' props would require a
+fragile recursive colon-normalized read-modify-write carrying real
+data-corruption risk — not worth it for a height nicety. The inline-param form
+was already rejected (render/match gate, FA1/FA2). Session-only is zero-write,
+zero-pollution (aligns with the user's stance against graph pollution), and
+zero-risk. Persistence can be revisited if a robust props approach emerges.
 
 ## Unchanged from the design doc
 - Located node = any page or block with a `Location::` text attribute; one code path, type-branch only at label/navigation.

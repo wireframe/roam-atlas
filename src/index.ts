@@ -19,6 +19,12 @@ export default runExtension(async () => {
       z-index: 10 !important;
     }
 
+    /* ComponentContainer defaults to width: fit-content, which collapses the
+       map to its minWidth; force it to fill the block instead. */
+    .roamjs-atlas-container {
+      width: 100% !important;
+    }
+
     a.leaflet-popup-close-button {
       display: none;
     }

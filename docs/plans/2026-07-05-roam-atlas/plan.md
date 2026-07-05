@@ -139,31 +139,26 @@ Structure: [structure.md](structure.md)
 
 ## Phase 5: Widget UX (resize + full-screen)
 
-- [ ] Task 5.1: Confirm `:block/props` persistence early (manual spike)
-  - File: n/a (Roam console)
-  - Change: in Roam, `await window.roamAlphaAPI.updateBlock({block:{uid:"<a real block>", props:{":roamjs-atlas":{height:321}}}})` then `window.roamAlphaAPI.pull("[:block/props]", [":block/uid","<uid>"])` — confirm the prop persists (resolves research.md FA3 caveat before building on it).
-  - Test: manual — the pulled props contain `{":roamjs-atlas":{height:321}}`. If it does NOT persist, stop and fall back to session-only height (structure Out-of-Scope note).
+- [x] Task 5.1: Confirm `:block/props` persistence (live spike) — DONE 2026-07-05
+  - Result: props DO persist, BUT `updateBlock` REPLACES the whole props map and Roam applies a non-uniform colon keyword transform to keys (research.md FA3). Safe foreign-prop-preserving read-modify-write is fragile with real corruption risk, and no roamjs-components helper exists. Decision D3 revised to **session-only height**. Task 5.2 dropped.
 
-- [ ] Task 5.2: `blockProps` height read/write — RED/GREEN
-  - File: `tests/blockProps.test.ts` (new), `src/blockProps.ts` (new)
-  - Change: `getMapHeight(uid)` reads `pull("[:block/props]", [":block/uid",uid])?.[":block/props"]?.[":roamjs-atlas"]?.height`; `setMapHeight(uid,h)` `updateBlock` merging existing props (don't clobber other `:roamjs-*` keys). Test with `installFakeRoam`: set then get returns the value; setting height preserves an unrelated existing prop key.
-  - Test: `npm test` green.
+- [x] Task 5.2: `blockProps` height read/write — DROPPED (session-only; no persistence, no `blockProps.ts`)
 
-- [ ] Task 5.3: Resize drag handle
+- [ ] Task 5.3: Resize drag handle (session-only)
   - File: `src/components/Maps.tsx`
-  - Change: bottom-edge handle; on drag, `setHeight` (React state) and `map.invalidateSize()` (research.md FA5); on drag-end, `setMapHeight(blockUid, h)`. On mount, initialize height from `getMapHeight(blockUid)` (fallback to default).
-  - Test: manual — drag resizes the map; reload the page → height retained.
+  - Change: bottom-edge drag handle; on drag, update a `height` React state and call `map.invalidateSize()` (research.md FA5). No persistence — height lives in component state only and resets to the default on reload. Build on the full-width container fix already in place.
+  - Test: manual — drag resizes the map (height changes, tiles re-fill); no graph write occurs.
 
 - [ ] Task 5.4: Full-screen toggle (session-only)
   - File: `src/components/Maps.tsx`, `src/index.ts` (overlay CSS)
   - Change: control button toggles a `position:fixed` full-viewport class on the container; call `map.invalidateSize()` on enter and exit (research.md FA5); `Esc` key exits. No persistence.
   - Test: manual — button fills viewport and tiles render correctly; `Esc` exits back to inline size.
 
-- [ ] Commit Phase 5 — "Widget UX: drag-resize persisted to :block/props, session full-screen overlay"
+- [ ] Commit Phase 5 — "Widget UX: session-only drag-resize + full-screen overlay"
 
 ---
 
 ## Definition of done
 - `npm test` green (Phases 1–5 unit/flow tests).
 - `npm run build:roam` succeeds.
-- Manual in Roam: `{{[[atlas]]}}`/`{{atlas}}` renders on type; curated page + block refs pin and auto-fit; geocode caches `Coordinates::` back once; clicks navigate; adding a child adds a pin live; resize persists across reload; full-screen toggles.
+- Manual in Roam: `{{[[atlas]]}}`/`{{atlas}}` renders on type; curated page + block refs pin and auto-fit; geocode caches `Coordinates::` back once; clicks navigate; adding a child adds a pin live; resize works (session-only); full-screen toggles.

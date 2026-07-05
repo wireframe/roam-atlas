@@ -135,22 +135,27 @@ const Maps = ({ blockId }: { blockId: string }): JSX.Element => {
     return watchBlockChildren(blockUid, reload);
   }, [blockUid, reload]);
 
+  // Leaflet caches the container's pixel size at creation. When the block first
+  // paints the container can still be 0/narrow, so an immediate invalidateSize
+  // is a no-op; deferring past the first paint lets it pick up the real width.
   const whenCreated = useCallback((m: Map) => {
-    m.invalidateSize();
+    requestAnimationFrame(() => m.invalidateSize());
   }, []);
 
   return (
-    <ComponentContainer blockId={blockId}>
-      <div style={{ position: "relative" }}>
+    <ComponentContainer blockId={blockId} className="roamjs-atlas-container">
+      <div style={{ position: "relative", width: "100%" }}>
         <MapContainer
           center={DEFAULT_CENTER}
           zoom={DEFAULT_ZOOM}
-          style={{ height: DEFAULT_HEIGHT }}
+          style={{ height: DEFAULT_HEIGHT, width: "100%" }}
           whenCreated={whenCreated}
         >
           <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            subdomains="abcd"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            detectRetina
           />
           <MarkerPins markers={markers} />
           <FitBounds markers={markers} />
