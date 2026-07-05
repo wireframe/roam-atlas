@@ -4,6 +4,18 @@
 
 ![An Atlas map with pins across Tokyo and an open pin popup showing a place's name and address](https://raw.githubusercontent.com/wireframe/roam-atlas/main/docs/images/map.png)
 
+## Highlights
+
+- **Automatic geocoding.** Write a plain-text address in a `Location::` attribute and Atlas looks up the coordinates for you, so you never type latitude and longitude by hand.
+- **Geocoded once, then cached.** Atlas writes a `Coordinates::` attribute back to the page or block, so later renders read the cache instead of the network.
+- **Live updating.** Add, remove, or edit a reference and the map re-pins and re-fits itself right away.
+- **Pages, blocks, and tags.** Pin `[[pages]]`, `#tags`, or `((block references))`, and each can carry its own location.
+- **Click to read, click to open.** A pin's popup shows the node's text and address; click the heading to open the page or block (shift-click sends it to the right sidebar).
+- **Resizable.** Drag the map's bottom edge to change its height.
+- **Full-screen mode.** One button fills the window with the map; Esc brings it back.
+- **No account or API key.** Free OpenStreetMap tiles and the free Nominatim geocoder, with nothing to sign up for.
+- **Missing locations don't break it.** A place Atlas can't geocode is noted in the corner instead of blanking the map.
+
 ## Usage
 
 **1. Give a page or block a location.** Add a `Location::` attribute with a text address:
