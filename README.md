@@ -1,10 +1,8 @@
 # Roam Atlas
 
-**Map your located Roam pages and blocks.** Give any page or block a `Location::` attribute with a text address, reference it under a `{{[[atlas]]}}` block, and Atlas geocodes it, caches the coordinates back into your graph, and pins it on an interactive map.
+**Map your located Roam pages and blocks.** Give any page or block a `Location::` attribute with a text address and reference it under a `{{[[atlas]]}}` block. Atlas geocodes each one, caches the coordinates back into your graph, and pins it on an interactive map.
 
 ![An Atlas map with pins across Tokyo and an open pin popup showing a place's name and address](https://raw.githubusercontent.com/wireframe/roam-atlas/main/docs/images/map.png)
-
-No Mapbox, no API token. Tiles come from OpenStreetMap (via CARTO) and geocoding from Nominatim — both free, because Atlas geocodes each place exactly once and stores the result in your graph.
 
 ## Usage
 
@@ -33,6 +31,10 @@ A block works the same way — put `Location::` as a child of the block. The fir
 The map auto-fits to show every pin and re-renders as you add or remove references. A reference it can't place — no `Location::`, or an address the geocoder doesn't recognize — is listed in a small corner note, so one missing location never blanks the map.
 
 **3. Read and open a pin.** Click a pin to open its popup: the page or block's text, plus its address when one is set. Click the popup heading to jump to that page or block (shift-click opens it in the right sidebar). Drag the map's bottom edge to resize it, or use the ⛶ button in the corner for a full-screen view (Esc exits).
+
+## How it works
+
+Atlas needs no account and no API key. Map tiles come from OpenStreetMap (rendered by CARTO), and addresses are geocoded by the free Nominatim service. Because Atlas caches each place's coordinates in your graph (see step 1), it queries Nominatim only once per location, which keeps it comfortably within that service's usage limits.
 
 ## Reference implementation
 
