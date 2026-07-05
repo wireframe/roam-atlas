@@ -1,6 +1,6 @@
 # Roam Atlas
 
-**Map your located Roam pages and blocks.** Give any page or block a `Location::` attribute with a text address, reference it under a `{{maps}}` block, and Atlas geocodes it, caches the coordinates back into your graph, and pins it on an interactive map. Click a pin to open its page or block.
+**Map your located Roam pages and blocks.** Give any page or block a `Location::` attribute with a text address, reference it under a `{{[[atlas]]}}` block, and Atlas geocodes it, caches the coordinates back into your graph, and pins it on an interactive map. Click a pin to open its page or block.
 
 No Mapbox, no API token. Tiles come from OpenStreetMap and geocoding from Nominatim — both free, because Atlas geocodes each place exactly once and stores the result in your graph.
 
@@ -15,10 +15,10 @@ No Mapbox, no API token. Tiles come from OpenStreetMap and geocoding from Nomina
 
 A block works the same way — put `Location::` as a child of the block.
 
-**2. Reference it under a map.** Type `{{maps}}` in a block and add page or block references as children:
+**2. Reference it under a map.** Type `{{[[atlas]]}}` (or the bare `{{atlas}}`) in a block and add page or block references as children:
 
 ```
-{{maps}}
+{{[[atlas]]}}
   - [[Ferry Building]]
   - [[Golden Gate Park]]
   - ((abc123))
@@ -30,6 +30,6 @@ The next time any map references the same page, it reuses the cached `Coordinate
 
 ## Reference implementation
 
-This is a clean-room reimplementation. The [RoamJS Mapbox extension](https://github.com/RoamJS/mapbox) was used only as a behavioral reference for how a `{{maps}}` button renders inside Roam.
+This is a clean-room reimplementation. The [RoamJS Mapbox extension](https://github.com/RoamJS/mapbox) (which uses `{{maps}}`) was used only as a behavioral reference for how a `{{...}}` button component renders inside Roam.
 
 See [`docs/plans/2026-07-05-roam-atlas-design.md`](docs/plans/2026-07-05-roam-atlas-design.md) for the full design.
