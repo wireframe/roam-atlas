@@ -76,27 +76,27 @@ Structure: [structure.md](structure.md)
 
 ## Phase 3: Geocoding layer
 
-- [ ] Task 3.1: `createGeocoder` — Nominatim URL + parsing — RED
+- [x] Task 3.1: `createGeocoder` — Nominatim URL + parsing — RED
   - File: `tests/geocode.test.ts` (new)
   - Change: with an injected `fetchImpl` stub returning `[{lat:"37.79", lon:"-122.39"}]`, `geocode("u1","Ferry Building")` resolves `[37.79,-122.39]`; empty array `[]` resolves `null`; a throwing `fetchImpl` resolves `null` (no throw — structure error-handling).
   - Test: `npm test` — fails.
 
-- [ ] Task 3.2: `createGeocoder` — GREEN
+- [x] Task 3.2: `createGeocoder` — GREEN
   - File: `src/geocode.ts` (new)
   - Change: `createGeocoder({ fetchImpl = window.fetch, delay = (ms)=>new Promise(r=>setTimeout(r,ms)), minIntervalMs = 1000 })`. `geocode(uid, text)` hits `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=<encodeURIComponent(text)>`, parses first result to `[parseFloat(lat), parseFloat(lon)]`, `null` on empty/error. (Browser fetch cannot set User-Agent; Nominatim identifies via Referer — note in code comment, research constraint.)
   - Test: `npm test` — 3.1 passes.
 
-- [ ] Task 3.3: In-flight dedupe by uid — RED/GREEN
+- [x] Task 3.3: In-flight dedupe by uid — RED/GREEN
   - File: `tests/geocode.test.ts`, `src/geocode.ts`
   - Change (test): two concurrent `geocode("u1", "X")` calls → `fetchImpl` invoked exactly once, both resolve same value. Change (impl): a `Map<uid, Promise>` in-flight set; return the existing promise if present; delete on settle.
   - Test: `npm test` green.
 
-- [ ] Task 3.4: Serialized 1-req/sec queue — RED/GREEN
+- [x] Task 3.4: Serialized 1-req/sec queue — RED/GREEN
   - File: `tests/geocode.test.ts`, `src/geocode.ts`
   - Change (test): with an injected `delay` spy and sequential `fetchImpl` that records active-count, three `geocode` calls for distinct uids → `fetchImpl` never runs concurrently (max active === 1) and `delay` is called with `minIntervalMs` between requests. Change (impl): chain each request onto a shared `queue = queue.then(() => run())`, awaiting `delay(minIntervalMs)` between dequeues.
   - Test: `npm test` green.
 
-- [ ] Commit Phase 3 — "Geocoding: Nominatim client with serialized 1-req/sec queue and in-flight dedupe"
+- [x] Commit Phase 3 — "Geocoding: Nominatim client with serialized 1-req/sec queue and in-flight dedupe"
 
 ## Phase 4: Map render pipeline
 
