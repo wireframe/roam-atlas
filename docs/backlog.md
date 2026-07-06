@@ -48,6 +48,7 @@ See the map-features exploration for the fuller catalog. Leverageable and keyles
 - **On-map search box** — leaflet-control-geocoder wrapping Nominatim.
 - **Query-driven maps** — populate pins from a Roam query/attribute instead of a manual reference list.
 - **GeoJSON import/export** — round-trip located data with other tools.
+- **Configurable location/coordinate attributes** — Atlas hardcodes `Location::` and `Coordinates::`; let users point it at their own attribute names (e.g. `Address::`) so it fits existing graph conventions instead of forcing Atlas's. Keyless — just a setting read at parse time. See `src/location.ts`.
 
 ## Related Documents
 
