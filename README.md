@@ -52,4 +52,4 @@ Atlas needs no account and no API key. Map tiles come from OpenStreetMap (render
 
 This is a clean-room reimplementation. The [RoamJS Mapbox extension](https://github.com/RoamJS/mapbox) (which uses `{{maps}}`) was used only as a behavioral reference for how a `{{...}}` button component renders inside Roam.
 
-See [`docs/plans/2026-07-05-roam-atlas-design.md`](docs/plans/2026-07-05-roam-atlas-design.md) for the full design.
+See [`docs/plans/2026-07-05-roam-atlas-design.md`](docs/plans/2026-07-05-roam-atlas-design.md) for the full design, and [`docs/backlog.md`](docs/backlog.md) for planned enhancements and future development ideas.
