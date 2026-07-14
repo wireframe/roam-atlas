@@ -49,6 +49,8 @@ See the map-features exploration for the fuller catalog. Leverageable and keyles
 - **Query-driven maps** — populate pins from a Roam query/attribute instead of a manual reference list.
 - **GeoJSON import/export** — round-trip located data with other tools.
 - **Configurable location/coordinate attributes** — Atlas hardcodes `Location::` and `Coordinates::`; let users point it at their own attribute names (e.g. `Address::`) so it fits existing graph conventions instead of forcing Atlas's. Keyless — just a setting read at parse time. See `src/location.ts`.
+- **Inherit coordinates from the page/block context** — if the page (or parent block) already has a `Coordinates::` attribute, Atlas should pick it up automatically instead of requiring the page or block to refer to itself. Example: a page has `Coordinates::`, and dropping `{{[[atlas]]}}` on that page with zero children defaults to plotting the parent/page context. Removes the redundant self-reference for the common single-location case. Keyless — read the surrounding block/page attributes at parse time. See `src/location.ts`.
+- **Zoom attribute** — let a graph set the map's initial zoom level via an attribute (e.g. `Zoom::`) instead of always auto-fitting to the pins. Useful when the author wants a consistent framing — a country-level overview or a tight street-level view — rather than whatever the bounds happen to produce. Keyless — read at parse time and pass to Leaflet's `setView`/`setZoom`.
 
 ## Related Documents
 
