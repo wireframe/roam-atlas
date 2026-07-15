@@ -52,6 +52,31 @@ See the map-features exploration for the fuller catalog. Leverageable and keyles
 - **Inherit coordinates from the page/block context** — if the page (or parent block) already has a `Coordinates::` attribute, Atlas should pick it up automatically instead of requiring the page or block to refer to itself. Example: a page has `Coordinates::`, and dropping `{{[[atlas]]}}` on that page with zero children defaults to plotting the parent/page context. Removes the redundant self-reference for the common single-location case. Keyless — read the surrounding block/page attributes at parse time. See `src/location.ts`.
 - **Zoom attribute** — let a graph set the map's initial zoom level via an attribute (e.g. `Zoom::`) instead of always auto-fitting to the pins. Useful when the author wants a consistent framing — a country-level overview or a tight street-level view — rather than whatever the bounds happen to produce. Keyless — read at parse time and pass to Leaflet's `setView`/`setZoom`.
 
+## From other map tools
+
+Ideas drawn from surveying Obsidian's [Map View](https://esm7.github.io/obsidian-map-view/) and [official Maps](https://github.com/obsidianmd/obsidian-maps) plugins, and the emerging class of agent-driven OSINT/webGIS apps that crawl sources and drop pins automatically.
+
+### Agent-populated maps (via Roam MCP)
+
+Let an agent (Claude over the existing Roam MCP) research or crawl a topic, geocode the results, and write `Location::`/`Coordinates::` attributes back into the graph under an `{{[[atlas]]}}` block — Atlas then plots them on the next render. This turns Atlas into the *view* for autonomous, OSINT-style map building, a pattern showing up across new agent tools (GeoSeer's image geolocation, Unifuncs' MCP-exposed research agents).
+
+- **Why:** Atlas is uniquely placed for this — the graph is already the datastore and the Roam MCP is already the write path. The agent does the crawling and geocoding; Atlas just reads attributes it already understands.
+- **How:** **Keyless for Atlas.** Mostly a docs/recipe showing the agent workflow, plus (optionally) a "re-render when the reference list or its attributes change" nicety so a freshly-populated block plots without a manual refresh.
+
+### Path / track import (GPX & KML)
+
+Import GPS tracks and recorded routes as polylines, extending the planned GeoJSON round-trip to the formats devices and other GIS tools export.
+
+- **Why:** Complements the planned "Route/itinerary lines" item — that connects pins in reference order, this renders an externally recorded track (a hike, a drive) as-is.
+- **How:** **Keyless** — client-side parse (small library or hand-rolled) into native Leaflet polylines. Map View also supports TCX; GPX and KML cover the common cases.
+- **Off-limits (needs a key):** turn-by-turn *routing* — Map View computes driving/cycling/walking routes via the GraphHopper API. Hosted routing engines need a key or someone's demo server, so it stays off the roadmap alongside the keyed tile sources.
+
+Smaller, leverageable and keyless:
+
+- **Multiple locations per node** — allow a page or block to carry several `Location::` values and pin each one, instead of a single location per node. Parse-time change in `src/location.ts`.
+- **Query-rule marker styling** — generalize the planned "Color/icon by tag" into rule-based styling: icon, badge, and color chosen by tag, attribute, or query. DivIcon markers driven by a small rule table.
+- **Offline tile caching** — cache OSM/CARTO tiles (and optionally batch-download an area) for offline use and faster loads. Keyless, but heavier — needs a caching/storage layer, so it sits below the quicker wins.
+
 ## Related Documents
 
 - [Design](plans/2026-07-05-roam-atlas-design.md) — the original Atlas design.
